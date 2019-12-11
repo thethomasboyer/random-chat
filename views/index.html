@@ -23,76 +23,67 @@
     <!--form for composing messages-->
     <form id="messageComposer">
         <input id="userMessageInputField" autocomplete="off" type="text" name="userInput">
-        <button id="sendButton" type="button">Zou -></button>
+        <button id="sendButton" type="button" onclick="listenToSendButton()">Envoyer</button>
     </form>
 
+    <!-- js -->
     <script src="/socket.io/socket.io.js"></script>
+    <!--<script src="public/js/init.js">init()</script>--> <!--can't load file, says wrong MIME type... -->
     <script>
     var socket = io()
-
+    /* callback on id='sendButton' button on click event */
     function listenToSendButton() {
-        //get the form element
-        let form = document.getElementById("messageComposer")
-
         // get the message input element
         let inputField = document.getElementById("userMessageInputField")
-
         // get its value
         let message = inputField.value
-
         // do nothing if message is empty
         if (message == "") {
             return false
         }
-
-        // otherwise send it
-        socket.emit('message', message)
-        console.log("hello")
-
+        // otherwise send it to the room...
+        socket.emit('chat message', message)
+        // ...and empty the input field
+        inputField.value = ""
+        console.log("Message sent: '" + message + "' to room: " + socket.room)
     }
 
+    /* handling newly received messages */
     function listenToIncomingMessages() {
-        // get already displayed messages
-        let messages = document.getElementById("messages")
-
-        // display it
-        socket.on('message', (msg) => {
+        socket.on('chat message', (msg) => {
+            console.log("Message received: " + msg + " on room: " + socket.room)
+            // get already displayed messages
+            let messages = document.getElementById("messages")
+            // display new ones
             let new_message = document.createElement('li')
             new_message.appendChild(document.createTextNode(msg));
             messages.appendChild(new_message)
         })
-
     }
 
+    /* handling room changes */
+    function listenToRoomChange() {
+        // if a 'room change' message is received...
+        socket.on('room change', (room) => {
+            /* ...clean messages here...
+            * but useles because no messages are supposed to
+            * have been sent. No ? :) */
+            // change the socket room
+            // beware that socket.room here is socket.room.id on server
+            socket.room = room.id
+            console.log("Received room change order, now on room " + socket.room)
+        })
+    }
+
+    /* global logic entry point */
     function init() {
-        // implement callback on "Send" button
-        let sendButton = document.getElementById('sendButton')
-        sendButton.addEventListener('click', listenToSendButton)
-        // listen to incom..
+        // start listening to room change
+        listenToRoomChange()
+        // start listening to incom..
         listenToIncomingMessages()
     }
 
-    init()
+    init() // client-side logic starts here
     </script>
-    <!--<script type="text/javascript" src="public/js/init.js">init()</script>-->
-    <!--<script src="https://code.jquery.com/jquery-1.11.1.js"></script>-->
-    <!--<script>
-        $(function () {
-            var socket = io()
-            $('form').submit(function(e){
-                e.preventDefault() // prevents page reloading
-                socket.emit('message', $('#userMessageInput').val())
-                $('#userMessageInput').val('')
-                return false
-            })
-            socket.on('message', function(msg){
-                $('#messages').append($('<li>').text(msg))
-            })
-        })
-    </script>-->
-    <!-- ...
-    <script> src="public/js/retreive_messages.js"</script>
-    <script> src="public/js/send_messages.js"</script>
-    -->
 </body>
 </html>
