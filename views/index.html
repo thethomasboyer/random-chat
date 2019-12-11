@@ -22,13 +22,61 @@
     <ul id="messages"></ul>
     <!--form for composing messages-->
     <form id="messageComposer">
-        <input id="userMessageInput" autocomplete="off" type="text" name="userInput">
-        <button id="sendButton">Send</button>
+        <input id="userMessageInputField" autocomplete="off" type="text" name="userInput">
+        <button id="sendButton" type="button">Zou -></button>
     </form>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-    <script onload="init()">
+    <script>
+    var socket = io()
+
+    function listenToSendButton() {
+        //get the form element
+        let form = document.getElementById("messageComposer")
+
+        // get the message input element
+        let inputField = document.getElementById("userMessageInputField")
+
+        // get its value
+        let message = inputField.value
+
+        // do nothing if message is empty
+        if (message == "") {
+            return false
+        }
+
+        // otherwise send it
+        socket.emit('message', message)
+        console.log("hello")
+
+    }
+
+    function listenToIncomingMessages() {
+        // get already displayed messages
+        let messages = document.getElementById("messages")
+
+        // display it
+        socket.on('message', (msg) => {
+            let new_message = document.createElement('li')
+            new_message.appendChild(document.createTextNode(msg));
+            messages.appendChild(new_message)
+        })
+
+    }
+
+    function init() {
+        // implement callback on "Send" button
+        let sendButton = document.getElementById('sendButton')
+        sendButton.addEventListener('click', listenToSendButton)
+        // listen to incom..
+        listenToIncomingMessages()
+    }
+
+    init()
+    </script>
+    <!--<script type="text/javascript" src="public/js/init.js">init()</script>-->
+    <!--<script src="https://code.jquery.com/jquery-1.11.1.js"></script>-->
+    <!--<script>
         $(function () {
             var socket = io()
             $('form').submit(function(e){
@@ -39,10 +87,9 @@
             })
             socket.on('message', function(msg){
                 $('#messages').append($('<li>').text(msg))
-                window.scrollTo(0, document.body.scrollHeight)
             })
         })
-    </script>
+    </script>-->
     <!-- ...
     <script> src="public/js/retreive_messages.js"</script>
     <script> src="public/js/send_messages.js"</script>
