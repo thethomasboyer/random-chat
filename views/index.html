@@ -4,16 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Random chat</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font: 13px Helvetica, Arial; }
+        form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+        form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+        form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+        #messages { list-style-type: none; margin: 0; padding: 0; }
+        #messages li { padding: 5px 10px; }
+        #messages li:nth-child(odd) { background: #eee; }
+    </style>
 </head>
 <body>
-    <h1>Salut !</h1>
+    <h1>Salutations !</h1>
+    <!--list of messages-->
+    <ul id="messages"></ul>
+    <!--form for composing messages-->
+    <form id="messageComposer">
+        <input id="userMessageInput" autocomplete="off" type="text" name="userInput">
+        <button id="sendButton">Send</button>
+    </form>
+
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        var socket = io();
-        socket.emit('salut', {message: 'ping'})
-        socket.on('Yo', (data)=>{console.log('got a Yo')})
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script onload="init()">
+        $(function () {
+            var socket = io()
+            $('form').submit(function(e){
+                e.preventDefault() // prevents page reloading
+                socket.emit('message', $('#userMessageInput').val())
+                $('#userMessageInput').val('')
+                return false
+            })
+            socket.on('message', function(msg){
+                $('#messages').append($('<li>').text(msg))
+                window.scrollTo(0, document.body.scrollHeight)
+            })
+        })
     </script>
-    <img src="media/cat.jpg" alt="un chat">
+    <!-- ...
+    <script> src="public/js/retreive_messages.js"</script>
+    <script> src="public/js/send_messages.js"</script>
+    -->
 </body>
 </html>

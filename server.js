@@ -12,13 +12,21 @@ app.use(express.static(path.join(__dirname, 'public')))
 // all routing logic is handled by routes/router.js
 app.use('', require('./routes/router'))
 
+// first connection = "entry point"
 io.on('connection', (socket) => {
-	console.log('a user connected');
-	socket.on('salut', (data) => {
-		console.log('got a ping')
-		socket.emit('Yo', {message : 'yo'})
+	console.log('a user connected')
+
+	// on connection, wait for a message
+	socket.on('message', (msg) => {
+		console.log('message: ' + msg)
+		//send the message to everybody
+		io.emit('message', msg)	
 	})
 
+	// disconnection handling
+	socket.on('disconnect', () => {
+		console.log('user disconnected')
+	})
 })
 
 http.listen(8080, () => {
