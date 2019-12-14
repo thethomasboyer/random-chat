@@ -43,6 +43,12 @@ function searchForChatRoom(socket, room_index) {
 /* ///entry point\\\ */
 io.on('connect', (socket) => {
     console.log('socket ' + socket.id + ' just connected')
+    // tell everybody somebody just connected
+    io.in('general').clients( (error, clients) => {
+        if (error) throw error
+        io.to('general').emit('greeting', {newcommer: socket.id, peoplecount: clients.length}
+        )
+    })
 
     // all users join general
     socket.join('general', () => {
