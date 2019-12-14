@@ -69,13 +69,12 @@ io.on('connect', (socket) => {
                 break
             }
         }
-        console.log('Received chat message "' + msg + '" from room ' + emitting_room +'. Sending it back')
+        console.log('Received chat message "' + msg + '" from room ' + emitting_room +', sending it back')
         if (emitting_room == undefined) {
             console.log("error: couldn't find emitting room!")
         } else {
             //send the message to the room
-            io.to(emitting_room).emit('chat message', msg)
-            //socket.broadcast.to(room_id).emit('chat message', msg)
+            socket.broadcast.to(emitting_room).emit('chat message', msg)
         }
         
 

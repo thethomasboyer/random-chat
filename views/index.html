@@ -49,28 +49,34 @@
         // ...and empty the input field
         inputField.value = ""
         console.log("Message sent: " + message)
+        appendNewMessage(message)
     }
 
     /* enter key triggers SendButton */
     function enterKeySendsMessage () {
         document.addEventListener('keydown', (e) => {
             if (e.keyCode === 13) {// "Enter" key code
-                sendMessage();
+                sendMessage()
             }
         })
+    }
+
+    /* update the page to display new message */
+    function appendNewMessage(msg) {
+        // get already displayed messages
+        let messages = document.getElementById("messages")
+        // display new ones
+        let new_message = document.createElement('li')
+        new_message.appendChild(document.createTextNode(msg));
+        messages.appendChild(new_message)
+        window.scrollTo(0, document.body.scrollHeight);
     }
 
     /* handling newly received messages */
     function listenToIncomingMessages() {
         socket.on('chat message', (msg) => {
             console.log("Message received: " + msg)
-            // get already displayed messages
-            let messages = document.getElementById("messages")
-            // display new ones
-            let new_message = document.createElement('li')
-            new_message.appendChild(document.createTextNode(msg));
-            messages.appendChild(new_message)
-            window.scrollTo(0, document.body.scrollHeight);
+            appendNewMessage(msg)
         })
     }
 
