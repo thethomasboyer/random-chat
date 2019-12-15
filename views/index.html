@@ -1,21 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Random chat</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font: 13px Helvetica, Arial; }
-        form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-        form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-        form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-        #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages li { padding: 5px 10px; }
-        #messages li:nth-child(odd) { background: #eee; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font: 13px Helvetica, Arial;
+        }
+
+        form {
+            background: #000;
+            padding: 3px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        form input {
+            border: 0;
+            padding: 10px;
+            width: 90%;
+            margin-right: .5%;
+        }
+
+        form button {
+            width: 9%;
+            background: rgb(130, 224, 255);
+            border: none;
+            padding: 10px;
+        }
+
+        #messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #messages li {
+            padding: 5px 10px;
+        }
+
+        #messages li:nth-child(odd) {
+            background: #eee;
+        }
     </style>
 </head>
+
 <body>
     <h1>Bienvenue sur le Random Chat !</h1>
     <p id="peopleCounter">There are ?? people connected to the service</p>
@@ -29,76 +68,101 @@
 
     <!-- js -->
     <script src="/socket.io/socket.io.js"></script>
-    <!--<script src="public/js/init.js">init()</script>--> <!--can't load file, says wrong MIME type... -->
+    <!--<script src="public/js/init.js">init()</script>-->
+    <!--can't load file, says wrong MIME type... -->
     <script>
-    var socket = io()
+        var socket = io()
 
-    /* callback on id='sendButton' button on click event */
-    function sendMessage() {
-        // get the message input element
-        let inputField = document.getElementById("userMessageInputField")
-        // get its value
-        let message = inputField.value
-        // do nothing if message is empty
-        if (message == "") {
-            return false
-        }
-        // otherwise send it to the room...
-        // ... with the saved room number, for simplicity
-        socket.emit('chat message', message)
-        // ...and empty the input field
-        inputField.value = ""
-        console.log("Message sent: " + message)
-        appendNewMessage(message)
-    }
-
-    /* enter key triggers SendButton */
-    function enterKeySendsMessage () {
-        document.addEventListener('keydown', (e) => {
-            if (e.keyCode === 13) {// "Enter" key code
-                sendMessage()
+        /* callback on id='sendButton' button on click event */
+        function sendMessage() {
+            // get the message input element
+            let inputField = document.getElementById("userMessageInputField")
+            // get its value
+            let message = inputField.value
+            // do nothing if message is empty
+            if (message == "") {
+                return false
             }
-        })
-    }
+            // otherwise send it to the room...
+            // ... with the saved room number, for simplicity
+            socket.emit('chat message', message)
+            // ...and empty the input field
+            inputField.value = ""
+            console.log("Message sent: " + message)
+            appendNewMessage(message)
+        }
 
-    /* update the page to display new message */
-    function appendNewMessage(msg) {
-        // get already displayed messages
-        let messages = document.getElementById("messages")
-        // display new ones
-        let new_message = document.createElement('li')
-        new_message.appendChild(document.createTextNode(msg));
-        messages.appendChild(new_message)
-        window.scrollTo(0, document.body.scrollHeight);
-    }
+        /* enter key triggers SendButton */
+        function enterKeySendsMessage() {
+            document.addEventListener('keydown', (e) => {
+                if (e.keyCode === 13) {// "Enter" key code
+                    sendMessage()
+                }
+            })
+        }
 
-    /* handling newly received messages */
-    function listenToIncomingMessages() {
-        socket.on('chat message', (msg) => {
-            console.log("Message received: " + msg)
-            appendNewMessage(msg)
-        })
-    }
+        /* Check if user is typing */
+        function userIsTyping() {
+            var searchTimeout
+            document.getElementById('userMessageInputField').onkeypress = function () {
+                if (searchTimeout != undefined) clearTimeout(searchTimeout)
+                searchTimeout = setTimeout(function () {
+                    socket.emit('user typing')
+                }, 250)
+            }
+        }
 
-    /* print the people count */
-    function printPeopleCount() {
-        socket.on('greeting', (data) => {
-            console.log(data.newcommer + ' just connected to the Random Chat!')
-            document.getElementById("peopleCounter").innerHTML = "There are " + data.peoplecount + " people connected to the service" 
-        })
-    }
+        /* update the page to display new message */
+        function appendNewMessage(msg) {
+            // get already displayed messages
+            let messages = document.getElementById("messages")
+            // display new ones
+            let new_message = document.createElement('li')
+            new_message.appendChild(document.createTextNode(msg));
+            messages.appendChild(new_message)
+            window.scrollTo(0, document.body.scrollHeight);
+        }
 
-    /* global logic entry point */
-    function init() {
-        // start listening to incom..
-        listenToIncomingMessages()
-        // print the people count
-        printPeopleCount()
-        // respond to "Enter" key press
-        enterKeySendsMessage()
-    }
+        /* handling newly received messages */
+        function listenToIncomingMessages() {
+            socket.on('chat message', (msg) => {
+                console.log("Message received: " + msg)
+                appendNewMessage(msg)
+            })
 
-    init() // client-side logic starts here
+            socket.on('user typing', () => {
+                console.log('User is typing')
+            })
+        }
+
+        /* print the people count */
+        function printPeopleCount() {
+            socket.on('greeting', (data) => {
+                console.log(data.newcommer + ' just connected to the Random Chat!')
+                const count = data.peoplecount + 1
+                let people_counter = document.getElementById("peopleCounter")
+                if (count > 1) {
+                    people_counter.innerHTML = "Il y a actuellement " + count + " personnes connectées !"
+                } else {
+                    people_counter.innerHTML = "Vous êtes seul(e)... :'("
+                }
+            })
+        }
+
+        /* global logic entry point */
+        function init() {
+            // start listening to incom..
+            listenToIncomingMessages()
+            // print the people count
+            printPeopleCount()
+            // respond to "Enter" key press
+            enterKeySendsMessage()
+            // blabla
+            userIsTyping()
+        }
+
+        init() // client-side logic starts here
     </script>
 </body>
+
 </html>

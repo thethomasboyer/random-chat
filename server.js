@@ -24,7 +24,7 @@ function searchForChatRoom(socket, room_index) {
     * full or not responding: try next, if existing. */
     let room = chat_rooms[room_index]
     console.log('trying room: ' + room)
-    io.in(room).clients( (error, clients) => {
+    io.in(room).clients((error, clients) => {
         console.log('clients for room ' + room + ': ' + clients)
         if (error) throw error
         if (clients.length < 2) {
@@ -33,56 +33,76 @@ function searchForChatRoom(socket, room_index) {
             })
         } else if (room_index + 1 < nb_chat_rooms) {
             searchForChatRoom(socket, room_index + 1)
-        } else {    
+        } else {
             console.log('no available room found for socket ' + socket.id + ', searching again in 1s')
             setTimeout(searchForChatRoom, 1000, socket, 0)
         }
     })
 }
 
+function findRoom(socket) {
+    rooms = Object.keys(socket.rooms)
+    let emitting_room
+    for (room of rooms) {
+        if (room != socket.id && room != 'general') {
+            emitting_room = room
+            break
+        }
+    }
+    if (emitting_room == undefined) {
+        console.log("error: couldn't find emitting room!")
+        return false
+    } else return emitting_room
+}
+
 /* ///entry point\\\ */
 io.on('connect', (socket) => {
     console.log('socket ' + socket.id + ' just connected')
     // tell everybody somebody just connected
-    io.in('general').clients( (error, clients) => {
+    io.in('general').clients((error, clients) => {
         if (error) throw error
-        io.to('general').emit('greeting', {newcommer: socket.id, peoplecount: clients.length}
+        io.to('general').emit('greeting', { newcommer: socket.id, peoplecount: clients.length }
         )
     })
 
-    // all users join general
+    /* all users join general */
     socket.join('general', () => {
         console.log('socket ' + socket.id + ' joined general')
     })
-    
-    // check for an available chat room
+
+    /* check for an available chat room, loop until found */
     searchForChatRoom(socket, 0)
 
-    // wait for a chat message
-	socket.on('chat message', (msg) => {
+    /* transmit chat messages to adequate rooms */
+    socket.on('chat message', (msg) => {
         //find the room it originates from
-        rooms = Object.keys(socket.rooms)
-        let emitting_room
-        for (room of rooms) {
-            if (room != socket.id && room != 'general') {
-                emitting_room = room
-                break
-            }
-        }
-        console.log('Received chat message "' + msg + '" from room ' + emitting_room +', sending it back')
-        if (emitting_room == undefined) {
-            console.log("error: couldn't find emitting room!")
-        } else {
-            //send the message to the room
+        let emitting_room = findRoom(socket)
+        console.log('Received chat message "' + msg + '" from room ' + emitting_room + ', transmitting')
+        if (emitting_room != false) {
+            //send the message back to the room, but not to the sender
             socket.broadcast.to(emitting_room).emit('chat message', msg)
         }
-        
+    })
 
-	})
+    /* Send typing indicator message */
+    socket.on('user typing', () => {
+        //find the room it originates from
+        let emitting_room = findRoom(socket)
+        console.log('Received user typing message from room ' + emitting_room + ', transmitting')
+        if (emitting_room != false) {
+            //send the message back to the room, but not to the sender
+            socket.broadcast.to(emitting_room).emit('user typing')
+        }
+    })
+
+    /* handle disconnection */
+    socket.on('disconnect', (reason) => {
+        console.log('socket ' + socket.id + ' just left ; cause: ' + reason)
+    })
 })
 
 http.listen(8080, () => {
-	console.log('----- Listening on port 8080 -----')
+    console.log('----- Listening on port 8080 -----')
 })
 
 module.exports = app
