@@ -15,8 +15,8 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use('', require('./routes/router'))
 
 /* array of available chat rooms */
-/* a socket should be part of less than one 
-* of these at any given time */
+/* a socket should be part of less than one
+ * of these at any given time */
 let chat_rooms = ['1', '2']
 let nb_chat_rooms = chat_rooms.length
 
@@ -118,13 +118,15 @@ function getInterloc(socket) {
 }
 
 /* ///entry point\\\ */
-io.on('connect', (socket) => {
+io.on('connect', socket => {
     console.log('socket ' + socket.id + ' just connected')
     // tell everybody somebody just connected
     io.in('general').clients((error, clients) => {
         if (error) throw error
-        io.to('general').emit('greeting', { newcommer: socket.id, peoplecount: clients.length }
-        )
+        io.to('general').emit('greeting', {
+            newcommer: socket.id,
+            peoplecount: clients.length,
+        })
     })
 
     /* all users join general */
@@ -136,7 +138,7 @@ io.on('connect', (socket) => {
     searchForChatRoom(socket, 0, true)
 
     /* transmit chat messages to adequate rooms */
-    socket.on('chat message', (msg) => {
+    socket.on('chat message', msg => {
         //find the room it originates from
         let emitting_room = findRoom(socket)
         if (emitting_room != undefined) {
@@ -165,7 +167,7 @@ io.on('connect', (socket) => {
     })
 
     /* handle disconnection */
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', reason => {
         console.log('socket ' + socket.id + ' just left ; cause: ' + reason)
         io.in('general').clients((error, clients) => {
             if (error) console.log(error)
@@ -175,8 +177,9 @@ io.on('connect', (socket) => {
     })
 })
 
-http.listen(8080, () => {
-    console.log('----- Listening on port 8080 -----')
+app.use('/route', require('./routes/route'))
+app.listen(8080, () => {
+    console.log('Listening on port 8080')
 })
 
 module.exports = app
