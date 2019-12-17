@@ -13,15 +13,15 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use('', require('./routes/router'))
 
 /* array of available chat rooms */
-/* a socket should be part of less than one 
-* of these at any given time */
+/* a socket should be part of less than one
+ * of these at any given time */
 let chat_rooms = ['1', '2']
 let nb_chat_rooms = chat_rooms.length
 
 function searchForChatRoom(socket, room_index) {
     /* Recursively search for an available chat room.
-    * If chat room of index 'room_index' in array 'chat_rooms' 
-    * full or not responding: try next, if existing. */
+     * If chat room of index 'room_index' in array 'chat_rooms'
+     * full or not responding: try next, if existing. */
     let room = chat_rooms[room_index]
     console.log('trying room: ' + room)
     io.in(room).clients((error, clients) => {
@@ -34,7 +34,11 @@ function searchForChatRoom(socket, room_index) {
         } else if (room_index + 1 < nb_chat_rooms) {
             searchForChatRoom(socket, room_index + 1)
         } else {
-            console.log('no available room found for socket ' + socket.id + ', searching again in 1s')
+            console.log(
+                'no available room found for socket ' +
+                    socket.id +
+                    ', searching again in 1s',
+            )
             setTimeout(searchForChatRoom, 1000, socket, 0)
         }
     })
@@ -56,13 +60,15 @@ function findRoom(socket) {
 }
 
 /* ///entry point\\\ */
-io.on('connect', (socket) => {
+io.on('connect', socket => {
     console.log('socket ' + socket.id + ' just connected')
     // tell everybody somebody just connected
     io.in('general').clients((error, clients) => {
         if (error) throw error
-        io.to('general').emit('greeting', { newcommer: socket.id, peoplecount: clients.length }
-        )
+        io.to('general').emit('greeting', {
+            newcommer: socket.id,
+            peoplecount: clients.length,
+        })
     })
 
     /* all users join general */
@@ -74,10 +80,16 @@ io.on('connect', (socket) => {
     searchForChatRoom(socket, 0)
 
     /* transmit chat messages to adequate rooms */
-    socket.on('chat message', (msg) => {
+    socket.on('chat message', msg => {
         //find the room it originates from
         let emitting_room = findRoom(socket)
-        console.log('Received chat message "' + msg + '" from room ' + emitting_room + ', transmitting')
+        console.log(
+            'Received chat message "' +
+                msg +
+                '" from room ' +
+                emitting_room +
+                ', transmitting',
+        )
         if (emitting_room != false) {
             //send the message back to the room, but not to the sender
             socket.broadcast.to(emitting_room).emit('chat message', msg)
@@ -88,7 +100,11 @@ io.on('connect', (socket) => {
     socket.on('user typing', () => {
         //find the room it originates from
         let emitting_room = findRoom(socket)
-        console.log('Received user typing message from room ' + emitting_room + ', transmitting')
+        console.log(
+            'Received user typing message from room ' +
+                emitting_room +
+                ', transmitting',
+        )
         if (emitting_room != false) {
             //send the message back to the room, but not to the sender
             socket.broadcast.to(emitting_room).emit('user typing')
@@ -96,13 +112,14 @@ io.on('connect', (socket) => {
     })
 
     /* handle disconnection */
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', reason => {
         console.log('socket ' + socket.id + ' just left ; cause: ' + reason)
     })
 })
 
-http.listen(8080, () => {
-    console.log('----- Listening on port 8080 -----')
+app.use('/route', require('./routes/route'))
+app.listen(8080, () => {
+    console.log('Listening on port 8080')
 })
 
 module.exports = app
