@@ -94,7 +94,7 @@ function findRoom(socket, first_connection = false) {
         } // .filter ?
     }
     if (emitting_room == undefined && !first_connection) {
-        console.log('error: couldn\'t find emitting room!')
+        console.log('error: couldn\'t find emitting room for socket ' + socket.id + '!')
     } else return emitting_room
 }
 
@@ -120,13 +120,18 @@ function getInterloc(socket) {
 /* ///entry point\\\ */
 io.on('connect', socket => {
     console.log('socket ' + socket.id + ' just connected')
-    // tell everybody somebody just connected
+
+    /* Send connection confirmation... */
+    io.to(socket.id).emit('connection success')
+
+    /* ...and tell everybody else somebody just connected  */
     io.in('general').clients((error, clients) => {
-        if (error) throw error
-        io.to('general').emit('greeting', {
+        if (error) console.log(error)
+        socket.broadcast.to('general').emit('greeting', {
             newcommer: socket.id,
             peoplecount: clients.length,
         })
+
     })
 
     /* all users join general */
@@ -134,17 +139,27 @@ io.on('connect', socket => {
         console.log('socket ' + socket.id + ' joined general')
     })
 
-    /* check for an available chat room, loop until found */
+    /* Check for an available chat room, loop until found */
     searchForChatRoom(socket, 0, true)
 
-    /* transmit chat messages to adequate rooms */
+    /* Respond to "people count" requests */
+    socket.on('how many?', () => {
+        io.in('general').clients((error, clients) => {
+            if (error) console.log(error)
+            io.to(socket.id).emit('how many?', clients.length)
+        })
+    })
+
+    /* Transmit chat messages to adequate rooms */
     socket.on('chat message', msg => {
         //find the room it originates from
         let emitting_room = findRoom(socket)
         if (emitting_room != undefined) {
-            console.log('Received chat message "' + msg + '" from room ' + emitting_room + ', transmitting')
             //send the message back to the room, but not to the sender
-            socket.broadcast.to(emitting_room).emit('chat message', msg)
+            socket.broadcast.to(emitting_room).emit('chat message', {
+                message: msg,
+                sender: socket.id
+            })
         }
     })
 
@@ -153,20 +168,19 @@ io.on('connect', socket => {
         //find the room it originates from
         let emitting_room = findRoom(socket)
         if (emitting_room != undefined) {
-            console.log('Received user typing message from room ' + emitting_room + ', transmitting')
             //send the message back to the room, but not to the sender
             socket.broadcast.to(emitting_room).emit('user typing')
         }
     })
 
-    /* change interlocutor */
+    /* Change of interlocutor */
     socket.on('change interloc', () => {
         console.log('User ' + socket.id + ' asked to change interlocutor')
         let interloc = getInterloc(socket)
         searchForChatRoomAvoidUser(socket, interloc)
     })
 
-    /* handle disconnection */
+    /* Handle disconnection */
     socket.on('disconnect', reason => {
         console.log('socket ' + socket.id + ' just left ; cause: ' + reason)
         io.in('general').clients((error, clients) => {
@@ -177,9 +191,10 @@ io.on('connect', socket => {
     })
 })
 
-app.use('/route', require('./routes/route'))
-app.listen(8080, () => {
-    console.log('Listening on port 8080')
+app.use('/route', require('./routes/router'))
+
+http.listen(8080, () => {
+    console.log('---- Listening on port 8080 -----')
 })
 
 module.exports = app
