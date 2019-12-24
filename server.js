@@ -10,7 +10,7 @@ const io = require('socket.io')(http)
 app.use(express.static(path.join(__dirname, 'public')))
 
 // all routing logic is handled by routes/router.js
-app.use('', require('./routes/router'))
+app.use('/', require('./routes/router'))
 
 /* array of available chat rooms */
 /* a socket should be part of less than one
@@ -117,8 +117,7 @@ io.on('connect', socket => {
     })
 })
 
-app.use('/route', require('./routes/route'))
-app.listen(8080, () => {
+http.listen(8080, () => {
     console.log('Listening on port 8080')
 })
 
