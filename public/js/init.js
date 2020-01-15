@@ -1,3 +1,10 @@
+/* Define connection status constants */
+const NOT_CONNECTED = 1
+const NO_USERNAME = 2
+const CHAT_ON = 3
+
+let status = NOT_CONNECTED
+
 /* Initiate connection */
 function connect() {
 	/* Launch socket.io */
@@ -6,23 +13,35 @@ function connect() {
 	let connection_error_pending = setTimeout(connectionError, 5000)
 	/* Wait for connection succes confirmation */
 	socket.on('connection success', () => {
-		// Stop timer
+		// Stop timer, change status
 		clearTimeout(connection_error_pending)
+		status = NO_USERNAME
+		/* Reveal username form page */
+		welcomPageOverlayOff()
 		/* Initiate chat logic */
 		init(socket)
-		overlayOff()
 		let message = '<font size="3"><span uk-icon=\'icon: check; ratio: 1.5\'></span>  Vous êtes connecté !</font>'
 		UIkit.notification({ message: message, pos: 'bottom-center', status: 'success' })
 	})
 }
 
+/* Display connection timeout notification */
 function connectionError() {
 	let message = '<font size="3"><span uk-icon=\'icon: warning; ratio: 1.5\'></span>  Il semble que vous ayez des difficultés à vous connecter...</font>'
 	UIkit.notification({ message: message, pos: 'bottom-center', status: 'warning' })
 }
 
-function overlayOff() {
+/* Remove welcome page overlay */
+function welcomPageOverlayOff() {
 	document.getElementById('welcomePage').style.height = '0%'
+}
+
+function setUsername() {
+	let username = document.getElementById('usernameInputField').value
+	if (username == '') {
+		let message = '<font size="3"><span uk-icon=\'icon: happy; ratio: 1.5\'></span>  Tu n\'as pas de nom ? </font>'
+		UIkit.notification({ message: message, pos: 'bottom-center' })
+	}
 }
 
 var displayed_messages = document.getElementById('messages')
@@ -50,10 +69,19 @@ function askHowMany(socket) {
 }
 
 /* Enter key triggers SendButton */
-function enterKeySendsMessage(socket) {
+function enterKeyTrigger(socket, status) {
 	document.addEventListener('keydown', (e) => {
 		if (e.keyCode === 13) {// "Enter" key code
-			sendMessage(socket)
+			switch (status) {
+			case NOT_CONNECTED:
+				break
+			case NO_USERNAME:
+				setUsername(); break
+			case CHAT_ON:
+				sendMessage(socket); break
+			default:
+				break
+			}
 		}
 	})
 }
@@ -138,7 +166,7 @@ function init(socket) {
 	/* Listen to incoming messages */
 	listenToIncomingMessages(socket)
 	/* Respond to "Enter" key press */
-	enterKeySendsMessage(socket)
+	enterKeyTrigger(socket, status)
 	/* Check if user is typing */
 	checkUserIsTyping(socket)
 }

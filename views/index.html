@@ -20,16 +20,17 @@
         <div class="welcomeTitle">
             <h1>Bienvenue sur le Random Chat!</h1>
             <div>
-                <button class="uk-button-primary uk-button-large" onclick='connect()'>Se connecter</button>
+                <button class="uk-button-primary uk-button-large" onclick="connect()">Se connecter</button>
             </div>
         </div>
     </div>
     <!-- Username form page overlay -->
     <div id="usernameFormPage" class="overlay">
         <div class="form">
-            <h3 class="title">Quel est ton nom, amigo ?</h3>
-            <input class="usernameInput" type="text" maxlength="14" />
-          </div>
+            <h3 class="title">Quel est ton nom ?</h3>
+            <input id="usernameInputField" class="usernameInput" type="text" maxlength="14" onkeydown="setUsername()"
+                autofocus />
+        </div>
     </div>
     <!-- Chat page -->
     <div class="uk-container uk-container-large">
