@@ -45,7 +45,7 @@ div.welcomeTitle h1 {
   z-index: 1;
 }
 
-.usernameFormPage .form {
+#usernameFormPage .form {
   height: 100px;
   margin-top: -100px;
   position: absolute;
@@ -54,7 +54,7 @@ div.welcomeTitle h1 {
   width: 100%;
 }
 
-.usernameFormPage .form .usernameInput {
+#usernameFormPage .form .usernameInput {
   background-color: transparent;
   border: none;
   border-bottom: 2px solid #fff;
@@ -64,16 +64,16 @@ div.welcomeTitle h1 {
   width: 400px;
 }
 
-.usernameFormPage .title {
+#usernameFormPage .title {
   font-size: 200%;
 }
 
-.usernameFormPage .usernameInput {
+#usernameFormPage .usernameInput {
   font-size: 200%;
   letter-spacing: 3px;
 }
 
-.usernameFormPage .title, .usernameFormPage .usernameInput {
+#usernameFormPage .title, #usernameFormPage .usernameInput {
   color: #fff;
   font-weight: 100;
 }
