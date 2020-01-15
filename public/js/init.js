@@ -27,8 +27,13 @@ function connect() {
 
 /* Display connection timeout notification */
 function connectionError() {
-	let message = '<font size="3"><span uk-icon=\'icon: warning; ratio: 1.5\'></span>  Il semble que vous ayez des difficultés à vous connecter...</font>'
-	UIkit.notification({ message: message, pos: 'bottom-center', status: 'warning' })
+	let message =
+        '<font size="3"><span uk-icon=\'icon: warning; ratio: 1.5\'></span>  Il semble que vous ayez des difficultés à vous connecter...</font>'
+	UIkit.notification({
+		message: message,
+		pos: 'bottom-center',
+		status: 'warning',
+	})
 }
 
 /* Remove welcome page overlay */
@@ -89,9 +94,9 @@ function enterKeyTrigger(socket, status) {
 /* Check if user is typing */
 function checkUserIsTyping(socket) {
 	var searchTimeout
-	document.getElementById('userMessageInputField').onkeypress = function () {
+	document.getElementById('userMessageInputField').onkeypress = function() {
 		if (searchTimeout != undefined) clearTimeout(searchTimeout)
-		searchTimeout = setTimeout(function () {
+		searchTimeout = setTimeout(function() {
 			socket.emit('user typing')
 		}, 250)
 	}
@@ -111,9 +116,10 @@ function appendNewMessage(displayed_messages, new_msg) {
 function updatePeopleCounter(count) {
 	let people_counter = document.getElementById('peopleCounter')
 	if (count > 1) {
-		people_counter.innerHTML = 'Il y a actuellement ' + count + ' personnes connectées !'
+		people_counter.innerHTML =
+            'Il y a actuellement ' + count + ' personnes connectées !'
 	} else {
-		people_counter.innerHTML = 'Vous êtes seul(e)... :\'('
+		people_counter.innerHTML = "Vous êtes seul(e)... :'("
 	}
 }
 
@@ -125,7 +131,7 @@ function changeInterlocutor(socket) {
 
 /* Handle received messages */
 function listenToIncomingMessages(socket) {
-	socket.on('chat message', (data) => {
+	socket.on('chat message', data => {
 		appendNewMessage(displayed_messages, data.message)
 	})
 
@@ -138,23 +144,29 @@ function listenToIncomingMessages(socket) {
 		console.log('Now talking to a brand new face!')
 	})
 
-	socket.on('greeting', (data) => {
+	socket.on('greeting', data => {
 		// display a notification
-		let notif = '<font size="2"><span uk-icon=\'icon: user\'></span> ' + data.newcommer + ' vient de se connecter !</font>'
+		let notif =
+            '<font size="2"><span uk-icon=\'icon: user\'></span> ' +
+            data.newcommer +
+            ' vient de se connecter !</font>'
 		UIkit.notification({ message: notif, pos: 'top-right' })
 		const count = data.peoplecount + 1
 		updatePeopleCounter(count)
 	})
 
-	socket.on('byebye', (data) => {
+	socket.on('byebye', data => {
 		// display a notification
-		let notif = '<font size="2"><span uk-icon=\'icon: user\'></span> ' + data.leaver + ' vient de partir !</font>'
+		let notif =
+            '<font size="2"><span uk-icon=\'icon: user\'></span> ' +
+            data.leaver +
+            ' vient de partir !</font>'
 		UIkit.notification({ message: notif, pos: 'top-right' })
 		const count = data.peoplecount - 1
 		updatePeopleCounter(count)
 	})
 
-	socket.on('how many?', (count) => {
+	socket.on('how many?', count => {
 		updatePeopleCounter(count)
 	})
 }

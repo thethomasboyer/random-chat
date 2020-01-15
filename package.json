@@ -1,21 +1,22 @@
 {
-  "name": "random-chat",
-  "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git@gitlab.data-ensta.fr:data/random-chat.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "express": "^4.17.1",
-    "mongoose": "^5.7.12",
-    "nodemon": "^2.0.2",
-    "socket.io": "^2.3.0"
-  }
+    "name": "random-chat",
+    "version": "1.0.0",
+    "description": "",
+    "main": "server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git@gitlab.data-ensta.fr:data/random-chat.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.17.1",
+        "mongoose": "^5.7.12",
+        "nodemon": "^2.0.2",
+        "socket.io": "^2.3.0"
+    }
 }
