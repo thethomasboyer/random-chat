@@ -28,8 +28,7 @@
     <div id="usernameFormPage" class="overlay">
         <div class="form">
             <h3 class="title">Quel est ton nom ?</h3>
-            <input id="usernameInputField" class="usernameInput" type="text" maxlength="14" onkeydown="setUsername()"
-                autofocus />
+            <input id="usernameInputField" class="usernameInput" type="text" maxlength="14" autofocus />
         </div>
     </div>
     <!-- Chat page -->
@@ -38,7 +37,8 @@
         <!-- connected people live counter -->
         <p id="peopleCounter"></p>
         <!-- change interlocutor button -->
-        <button class="uk-button" id="changeInterlocutorButton" type="button" onclick="changeInterlocutor()">Changer
+        <button class="uk-button" id="changeInterlocutorButton" type="button"
+            onclick="changeInterlocutor(socket)">Changer
             d'interlocuteur</button>
         <!--list of messages-->
         <div class="uk-margin uk-margin-left">
