@@ -20,6 +20,13 @@ app.use('/', require('./routes/router'))
 let chat_rooms = ['1', '2']
 let nb_chat_rooms = chat_rooms.length
 
+/* Array of "people" object.
+ * To each socket(.id) corresponds a unique human-chosen username.
+ * Model : users = [
+ * { id: socket.id, username: username },
+ * ] */
+let users = []
+
 function changeRoom(socket, room, first_connection = false) {
     /* Make socket leave its current chat room (if existing),
      * and join 'room' */
@@ -55,8 +62,8 @@ function searchForChatRoom(socket, room_index = 0, first_connection = false) {
         } else {
             console.log(
                 'no available room found for socket ' +
-                    socket.id +
-                    ', searching again in 3s',
+                socket.id +
+                ', searching again in 3s',
             )
             setTimeout(searchForChatRoom, 3000, socket)
         }
@@ -80,8 +87,8 @@ function searchForChatRoomAvoidUser(socket, user, room_index = 0) {
             //else retry whole search process later
             console.log(
                 'no room found for socket ' +
-                    socket.id +
-                    ', searching again in 3s',
+                socket.id +
+                ', searching again in 3s',
             )
             setTimeout(searchForChatRoom, 3000, socket)
         }
@@ -104,13 +111,13 @@ function findRoom(socket, first_connection = false) {
     }
     if (emitting_room == undefined && !first_connection) {
         console.log(
-            "error: couldn't find emitting room for socket " + socket.id + '!',
+            'error: couldn\'t find emitting room for socket ' + socket.id + '!',
         )
     } else return emitting_room
 }
 
 function getInterloc(socket) {
-    /* Get the interlocutor of a socket.
+    /* Get the interlocutor' socket id of a user (socket).
      * Assumes there are no more than 2 people by chat room. */
     let emitting_room = findRoom(socket)
     if (emitting_room != undefined) {
@@ -125,7 +132,18 @@ function getInterloc(socket) {
             }
         })
         return interloc
-    } else console.log("error: couldn't find interlocutor!")
+    } else console.log('error: couldn\'t find interlocutor!')
+}
+
+function findUsername(socket) {
+    /* Get the username of a user (socket).
+     * Assumes the socket has a valid (ie unique)
+     * username in "users" list. */
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].id == socket.id) {
+            return users[i].username
+        }
+    }
 }
 
 /* ///entry point\\\ */
@@ -135,7 +153,7 @@ io.on('connect', socket => {
     /* Send connection confirmation... */
     io.to(socket.id).emit('connection success')
 
-    /* ...and tell everybody else somebody just connected  */
+    /* ...and tell everybody else somebody just connected */
     io.in('general').clients((error, clients) => {
         if (error) console.log(error)
         socket.broadcast.to('general').emit('greeting', {
@@ -160,15 +178,26 @@ io.on('connect', socket => {
         })
     })
 
+    socket.on('username proposal', (username) => {
+        if (users.some(user => (user.username == username))) {
+            io.to(socket.id).emit('used username')
+        } else {
+            users.push({ id: socket.id, username: username })
+            io.to(socket.id).emit('accepted username', username)
+        }
+    })
+
     /* Transmit chat messages to adequate rooms */
     socket.on('chat message', msg => {
         //find the room it originates from
         let emitting_room = findRoom(socket)
+        //get the username of the sender
+        let username = findUsername(socket)
         if (emitting_room != undefined) {
             //send the message back to the room, but not to the sender
             socket.broadcast.to(emitting_room).emit('chat message', {
                 message: msg,
-                sender: socket.id,
+                sender: username,
             })
         }
     })
@@ -193,10 +222,19 @@ io.on('connect', socket => {
     /* Handle disconnection */
     socket.on('disconnect', reason => {
         console.log('socket ' + socket.id + ' just left ; cause: ' + reason)
+        //remove the leaving user from "users" list
+        //(assuming only one user corresponding to id)
+        let username
+        for (let i = 0; i < users.length; i++) {
+            if (users[i].id == socket.id) {
+                username = users[i].username
+                users.splice(i, 1); break
+            }
+        }
         io.in('general').clients((error, clients) => {
             if (error) console.log(error)
             io.to('general').emit('byebye', {
-                leaver: socket.id,
+                leaver: username,
                 peoplecount: clients.length,
             })
         })
