@@ -2,66 +2,65 @@
 <html lang="fr">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="css/uikit.min.css" />
-    <link rel="stylesheet" href="css/style.css" />
-    <script src="js/uikit.min.js"></script>
-    <script src="js/uikit-icons.min.js"></script>
-    <title>Random chat</title>
-    <meta name="description" content="Random Chat: connectez-vous \
-    pour discuter avec des ENSTA en toute anonymat..." />
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" type="text/css"
+		rel="stylesheet" </head>
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+	<link rel="stylesheet" href="css/style.css" />
+	<link rel="stylesheet" href="css/uikit.min.css" />
+	<script src="js/uikit.min.js"></script>
+	<script src="js/uikit-icons.min.js"></script>
+	<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+	<title>Random chat</title>
+	<meta name="description" content="Random Chat: connectez-vous \
+		pour discuter avec des ENSTA en toute anonymat..." />
 </head>
 
 <body>
-    <!-- Welcomme page overlay -->
-    <div id="welcomePage" class="overlay">
-        <div class="welcomeTitle">
-            <h1>Bienvenue sur le Random Chat!</h1>
-            <div>
-                <button class="uk-button-primary uk-button-large" onclick="connect()">Se connecter</button>
-            </div>
-        </div>
-    </div>
-    <!-- Username form page overlay -->
-    <div id="usernameFormPage" class="overlay">
-        <div class="form">
-            <h3 class="title">Quel est ton nom ?</h3>
-            <input id="usernameInputField" class="usernameInput" type="text" maxlength="14" autofocus />
-        </div>
-    </div>
-    <!-- Chat page -->
-    <div class="uk-container uk-container-large">
-        <h3>Vous discutez avec : </h3>
-        <!-- connected people live counter -->
-        <p id="peopleCounter"></p>
-        <!-- change interlocutor button -->
-        <button class="uk-button" id="changeInterlocutorButton" type="button"
-            onclick="changeInterlocutor(socket)">Changer
-            d'interlocuteur</button>
-        <!--list of messages-->
-        <div class="uk-margin uk-margin-left">
-            <ul class="uk-list" id="messages"></ul>
-        </div>
-        <!--form for composing messages-->
-        <form id="messageComposer" onSubmit="return false">
-            <div class="uk-child-width-expand@s" uk-grid>
-                <div class="uk-width-4-5">
-                    <input class="uk-input uk-align-left uk-box-shadow-hover-small" id="userMessageInputField"
-                        autocomplete="off" type="text" name="userInput" placeholder="Tapez votre message ici">
-                </div>
-                <button class="uk-button-primary uk-width-1-6 uk-margin-left uk-box-shadow-hover-medium"
-                    uk-tooltip="title: Alors ? On hÃ©site ?; delay: 5000" id="sendButton" type="button"
-                    onclick="sendMessage()">
-                    <font size="3">Envoyer</font><span uk-icon="icon: arrow-right; ratio: 1.5"></span>
-                </button>
-            </div>
-        </form>
-    </div>
-    <!-- js -->
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="js/init.js"></script>
+	<!-- Welcomme page overlay -->
+	<div id="welcomePage" class="overlay">
+		<div class="welcomeTitle">
+			<h1>Bienvenue sur le Random Chat!</h1>
+			<div>
+				<button class="uk-button-primary uk-button-large" onclick="connect()">Se connecter</button>
+			</div>
+		</div>
+	</div>
+	<!-- Username form page overlay -->
+	<div id="usernameFormPage" class="overlay">
+		<div class="form">
+			<h3 class="title">Quel est ton nom ?</h3>
+			<input id="usernameInputField" class="usernameInput" type="text" maxlength="14" autofocus />
+		</div>
+	</div>
+	<!-- Chat page -->
+	<div class="container">
+		<h3 class=" text-center">Vous discutez avec : </h3>
+		<!-- connected people live counter -->
+		<p id="peopleCounter"></p>
+		<div class="messaging">
+			<div class="inbox_msg">
+				<div class="mesgs">
+					<!-- messaging history -->
+					<div class="msg_history" id="messages">
+					</div>
+					<!-- input form -->
+					<div class="type_msg">
+						<div class="input_msg_write">
+							<input type="text" class="write_msg" id="userMessageInputField" placeholder="Tapez votre message ici" />
+							<button class="msg_send_btn" uk-tooltip="title: Alors ? On hésite ?; delay: 5000" type="button"
+								onclick="sendMessage(socket)"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- js -->
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="js/init.js"></script>
 </body>
 
 </html>

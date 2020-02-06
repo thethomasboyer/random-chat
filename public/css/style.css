@@ -1,97 +1,220 @@
-/* Overlays ('background) */
+/*** Overlays (background) ***/
 
 .overlay {
-  height: 100%;
-  width: 100%;
-  position: fixed;
-  left: 0;
-  top: 0;
-  background-color: #000000;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  transition: 0.5s;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: #000000;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    transition: 0.5s;
 }
 
-/* Welcome page */
+
+/*** Welcome page ***/
+
 
 /* Position the content inside the welcome overlay */
 
 #welcomePage {
-  z-index: 2;
+    z-index: 2;
 }
 
 .welcomeTitle {
-  position: relative;
-  top: 25%;
-  width: 100%;
-  text-align: center;
-  margin-top: 30px;
-  display: flex;
-  align-items: center;
+    position: relative;
+    top: 25%;
+    width: 100%;
+    text-align: center;
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
 }
 
 div.welcomeTitle {
-  height: 10em;
-  display: flex;
-  align-items: center;
-  justify-content: center }
+    height: 10em;
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
 
 div.welcomeTitle h1 {
-  margin: 0 }
+    margin: 0
+}
 
-/* Username form page */
+
+/*** Username form page ***/
 
 #usernameFormPage {
-  z-index: 1;
+    z-index: 1;
 }
 
 #usernameFormPage .form {
-  height: 100px;
-  margin-top: -100px;
-  position: absolute;
-  text-align: center;
-  top: 50%;
-  width: 100%;
+    height: 100px;
+    margin-top: -100px;
+    position: absolute;
+    text-align: center;
+    top: 50%;
+    width: 100%;
 }
 
 #usernameFormPage .form .usernameInput {
-  background-color: transparent;
-  border: none;
-  border-bottom: 2px solid #fff;
-  outline: none;
-  padding-bottom: 15px;
-  text-align: center;
-  width: 400px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid #fff;
+    outline: none;
+    padding-bottom: 15px;
+    text-align: center;
+    width: 400px;
 }
 
 #usernameFormPage .title {
-  font-size: 200%;
+    font-size: 200%;
 }
 
 #usernameFormPage .usernameInput {
-  font-size: 200%;
-  letter-spacing: 3px;
+    font-size: 200%;
+    letter-spacing: 3px;
 }
 
-#usernameFormPage .title, #usernameFormPage .usernameInput {
-  color: #fff;
-  font-weight: 100;
+#usernameFormPage .title,
+#usernameFormPage .usernameInput {
+    color: #fff;
+    font-weight: 100;
 }
 
-/* Refactor UK notifications a bit */
+
+/*** Refactor UK notifications a bit ***/
 
 .uk-notification {
-  width: auto!important;
-  min-width: 300px!important;
-  max-width: 1000px!important;
-  height: auto!important;
-  display: flex!important;
-  flex-direction: column;
+    width: auto!important;
+    min-width: 300px!important;
+    max-width: 1000px!important;
+    height: auto!important;
+    display: flex!important;
+    flex-direction: column;
 }
+
 .uk-notification-message {
-  padding-right: 1em!important;
-  width: auto!important;
-  max-width: 80%!important;
-  text-align: left;
-  display: inline-flex;
+    padding-right: 1em!important;
+    width: auto!important;
+    max-width: 80%!important;
+    text-align: left;
+    display: inline-flex;
+}
+
+
+/*** Chat style ***/
+
+
+/* Warpers */
+
+.container {
+    max-width: 1170px;
+    margin: auto;
+}
+
+.messaging {
+    padding: 0 0 50px 0;
+}
+
+.inbox_msg {
+    border: 1px solid #c4c4c4;
+    clear: both;
+    overflow: hidden;
+}
+
+.mesgs {
+    padding: 30px 15px 0 25px;
+}
+
+.msg_history {
+    height: 516px;
+    overflow-y: auto;
+}
+
+.type_msg {
+    border-top: 1px solid #c4c4c4;
+    position: relative;
+}
+
+
+/* Message style */
+
+.incoming_msg {
+    display: inline-block;
+    padding: 0 0 0 10px;
+    vertical-align: top;
+    width: 92%;
+}
+
+.sub_incoming_msg {
+    width: 57%;
+}
+
+.sub_incoming_msg p {
+    background: #ebebeb none repeat scroll 0 0;
+    border-radius: 3px;
+    color: #646464;
+    font-size: 14px;
+    margin: 0;
+    padding: 5px 10px 5px 12px;
+    width: 100%;
+}
+
+.outgoing_msg {
+    overflow: hidden;
+    margin: 26px 0 26px;
+}
+
+.sub_outgoing_msg {
+    float: right;
+    width: 46%;
+}
+
+.sub_outgoing_msg p {
+    background: #05728f none repeat scroll 0 0;
+    border-radius: 3px;
+    color: #fff;
+    font-size: 14px;
+    margin: 0;
+    padding: 5px 10px 5px 12px;
+    width: 100%;
+}
+
+
+/* Date style */
+
+.time_date {
+    color: #747474;
+    display: block;
+    font-size: 12px;
+    margin: 8px 0 0;
+}
+
+
+/* Input form style */
+
+.input_msg_write input {
+    background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
+    border: medium none;
+    color: #4c4c4c;
+    font-size: 15px;
+    min-height: 48px;
+    width: 100%;
+}
+
+.msg_send_btn {
+    background: #05728f none repeat scroll 0 0;
+    border: medium none;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    font-size: 17px;
+    height: 33px;
+    position: absolute;
+    right: 0;
+    top: 11px;
+    width: 33px;
 }
