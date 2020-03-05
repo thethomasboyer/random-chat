@@ -35,9 +35,16 @@
 			<input id="usernameInputField" class="usernameInput" type="text" maxlength="14" autofocus />
 		</div>
 	</div>
+	<!-- Spinner page overlay -->
+	<div id="spinnerPage" class="overlay">
+		<div class="roomWaitMessage">
+			<h3 class="title">En attente de salon...</h3>
+			<div id="spinner" uk-spinner="ratio: 3"></div>
+		</div>
+	</div>
 	<!-- Chat page -->
 	<div class="container">
-		<h3 class=" text-center">Vous discutez avec : </h3>
+		<h3 id="interloc" class=" text-center"></h3>
 		<!-- connected people live counter -->
 		<p id="peopleCounter"></p>
 		<div class="messaging">

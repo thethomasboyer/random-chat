@@ -6,7 +6,7 @@
     position: fixed;
     left: 0;
     top: 0;
-    background-color: #000000;
+    background-color: #ffffff;
     overflow-x: hidden;
     overflow-y: hidden;
     transition: 0.5s;
@@ -19,7 +19,7 @@
 /* Position the content inside the welcome overlay */
 
 #welcomePage {
-    z-index: 2;
+    z-index: 3;
 }
 
 .welcomeTitle {
@@ -47,7 +47,7 @@ div.welcomeTitle h1 {
 /*** Username form page ***/
 
 #usernameFormPage {
-    z-index: 1;
+    z-index: 2;
 }
 
 #usernameFormPage .form {
@@ -62,7 +62,7 @@ div.welcomeTitle h1 {
 #usernameFormPage .form .usernameInput {
     background-color: transparent;
     border: none;
-    border-bottom: 2px solid #fff;
+    border-bottom: 2px solid rgb(0, 0, 0);
     outline: none;
     padding-bottom: 15px;
     text-align: center;
@@ -80,8 +80,35 @@ div.welcomeTitle h1 {
 
 #usernameFormPage .title,
 #usernameFormPage .usernameInput {
-    color: #fff;
+    color: rgb(0, 0, 0);
     font-weight: 100;
+}
+
+/*** Spinner page ***/
+
+#spinnerPage {
+    z-index: 1;
+}
+
+.roomWaitMessage {
+    position: relative;
+    top: 25%;
+    width: 100%;
+    text-align: center;
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+}
+
+div.roomWaitMessage {
+    height: 10em;
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
+
+div.welcomeTitle h3 {
+    margin: 0
 }
 
 
@@ -90,7 +117,7 @@ div.welcomeTitle h1 {
 .uk-notification {
     width: auto!important;
     min-width: 300px!important;
-    max-width: 1000px!important;
+    max-width: 1500px!important;
     height: auto!important;
     display: flex!important;
     flex-direction: column;

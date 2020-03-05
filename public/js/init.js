@@ -5,7 +5,9 @@ const NOT_CONNECTED = 1
 const CONNECTION_PENDING = 2
 const NO_USERNAME = 3
 const USERNAME_PENDING = 4
-const CHAT_ON = 5
+const ROOM_PENDING = 5
+const CHAT_ON = 6
+// (Some of them may be useless)
 
 let status = NOT_CONNECTED
 
@@ -15,40 +17,51 @@ let username
 function connect() {
     /* If a connection attempt has already been emitted, don't try again... */
     if (status === CONNECTION_PENDING) return 1
-        /* ...else, launch socket.io */
+    /* ...else, launch socket.io */
     else status = CONNECTION_PENDING
     var socket = io()
-        /* Bind socket to document because fuck you that's the only thing working */
+    /* Bind socket to document because fuck you that's the only thing working */
     document.socket = socket
-        /* Start timer for connection timeout error */
+    /* Start timer for connection timeout error */
     let connection_error_pending = setTimeout(connectionError, 3000)
-        /* Wait for connection succes confirmation... */
+    /* Wait for connection succes confirmation... */
     socket.on('connection success', () => {
         /* Stop timer, change status */
         clearTimeout(connection_error_pending)
         status = NO_USERNAME
         let message = '<font size="3"><span uk-icon=\'icon: check; ratio: 1.5\'></span>  Vous êtes connecté !</font>'
         UIkit.notification({ message: message, pos: 'bottom-center', status: 'success' })
-            /* Reveal username form page */
+        /* Reveal username form page */
         welcomPageOverlayOff()
-            /* Enter key triggers a username proposal */
+        /* Enter key triggers a username proposal */
         document.addEventListener('keydown', enterKeyUsernameProp)
-            /* Wait for username confirmation... */
+        /* Wait for username confirmation... */
         socket.on('accepted username', usrnm => {
-                /* Cache username */
-                username = usrnm
-                    /* Initiate chat logic */
-                init(socket, username)
-                let message = '<font size="3"><span uk-icon=\'icon: check; ratio: 1.5\'></span>  Bienvenue </font>' + username + '<font size="3"> !</font>'
+            /* Wait for an available room*/
+            status = ROOM_PENDING
+            /* Cache username */
+            username = usrnm
+            /* Initiate chat logic */
+            init(socket, username)
+            let message = '<font size="3"><span uk-icon=\'icon: check; ratio: 1.5\'></span>  Bienvenue </font>' + username + '<font size="3"> !</font>'
+            UIkit.notification({ message: message, pos: 'bottom-center', status: 'success' })
+            /* Reveal spinner page */
+            usernameFormPageOverlayOff()
+            /* Wait for room confirmation */
+            socket.on('joined room', data => {
+                /* Reveal chat page */
+                setTimeout(spinnerPageOverlayOff, 700)
+                let message = '<font size="3"><span uk-icon=\'icon: users; ratio: 1.5\'></span>  Vous êtes dans le salon n°</font>' + data.room + '<font size="3"> !</font>'
                 UIkit.notification({ message: message, pos: 'bottom-center', status: 'success' })
-                    /* Reveal chat page */
-                usernameFormPageOverlayOff()
-                    /* Go chatting! */
+                /* Go chatting! */
                 status = CHAT_ON
-                    /* Respond to "Enter" key press */
+                /* Respond to "Enter" key press */
                 document.addEventListener('keydown', enterKeySendsMsg)
+                /* Update interlocutor */
+                updateInterlocutor(data.interlocutor)
             })
-            /* ...or denial! */
+        })
+        /* ...or denial! */
         socket.on('used username', () => {
             status = NO_USERNAME
             let message = '<font size="3"><span uk-icon=\'icon: warning; ratio: 1.5\'></span>  Ton nom est déjà utilisé ! </font>'
@@ -97,12 +110,18 @@ function usernameFormPageOverlayOff() {
     document.getElementById('usernameFormPage').style.height = '0%'
 }
 
-/* COMMENTS PLEAZ */
+function spinnerPageOverlayOff() {
+    document.getElementById('spinnerPage').style.height = '0%'
+}
+
+/* Propose a username to server */
 function setUsername(socket) {
+    // No more than one proposal at a time plz
     document.removeEventListener('keydown', enterKeyUsernameProp)
     if (status === USERNAME_PENDING) return 1
-    else status = USERNAME_PENDING
+    // Get the string
     let username = document.getElementById('usernameInputField').value
+    // Some basic validation
     if (username == '') {
         let message = '<font size="3"><span uk-icon=\'icon: question; ratio: 1.5\'></span> Tu n\'as pas de nom ? </font>'
         UIkit.notification({ message: message, pos: 'bottom-center' })
@@ -123,17 +142,17 @@ var displayed_messages = document.getElementById('messages')
 function sendMessage(socket) {
     // get the message input element
     let inputField = document.getElementById('userMessageInputField')
-        // get its value
+    // get its value
     let message = inputField.value
-        // do nothing if message is empty
+    // do nothing if message is empty
     if (message == '') {
         return false
     }
     // otherwise send it to the room...
     socket.emit('chat message', message)
-        // ...empty the input field...
+    // ...empty the input field...
     inputField.value = ''
-        // ...and add it to displayed messages list
+    // ...and add it to displayed messages list
     appendNewMessage(displayed_messages, message, true, username)
 }
 
@@ -154,7 +173,7 @@ function checkUserIsTyping(socket) {
     let searchTimeout
     document.getElementById('userMessageInputField').onkeypress = () => {
         if (searchTimeout != undefined) clearTimeout(searchTimeout)
-        searchTimeout = setTimeout(function() {
+        searchTimeout = setTimeout(function () {
             socket.emit('user typing')
         }, 250)
     }
@@ -166,13 +185,13 @@ function appendNewMessage(displayed_messages, new_msg, source, username) {
     /* display new ones */
     // create new outgoing/incoming msg instance
     let new_message_instance = document.createElement('div')
-        // sub-div
+    // sub-div
     let new_sub_msg_inst = document.createElement('div')
     new_message_instance.appendChild(new_sub_msg_inst)
-        // paragraph (text-container)
+    // paragraph (text-container)
     let p = document.createElement('p')
     new_sub_msg_inst.appendChild(p)
-        // apply relevant style
+    // apply relevant style
     if (source) {
         new_message_instance.className += 'outgoing_msg'
         new_sub_msg_inst.className += 'sub_outgoing_msg'
@@ -184,7 +203,7 @@ function appendNewMessage(displayed_messages, new_msg, source, username) {
     // username?
     p.appendChild(document.createTextNode(new_msg))
     displayed_messages.appendChild(new_message_instance)
-        // scroll to bottom
+    // scroll to bottom
     displayed_messages.scrollTo(0, document.body.scrollHeight)
 }
 
@@ -196,6 +215,17 @@ function updatePeopleCounter(count) {
             'Il y a actuellement ' + count + ' personnes connectées !'
     } else {
         people_counter.innerHTML = 'Vous êtes seul(e)... :\'('
+    }
+}
+
+/* Print interlocutor */
+function updateInterlocutor(interlocutor) {
+    let interlocPrinter = document.getElementById('interloc')
+    if (interlocutor != undefined) {
+        interlocPrinter.innerHTML = 'Vous discutez avec ' + interlocutor + '.'
+    }
+    else {
+        interlocPrinter.innerHTML = 'Vous ne discutez avec personne !'
     }
 }
 
@@ -253,8 +283,8 @@ function listenToIncomingMessages(socket) {
 function init(socket) {
     /* Ask how many people connected */
     askHowMany(socket)
-        /* Listen to incoming messages */
+    /* Listen to incoming messages */
     listenToIncomingMessages(socket)
-        /* Check if user is typing */
+    /* Check if user is typing */
     checkUserIsTyping(socket)
 }
