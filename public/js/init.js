@@ -26,6 +26,8 @@ function connect() {
     let connection_error_pending = setTimeout(connectionError, 3000)
     /* Wait for connection succes confirmation... */
     socket.on('connection success', () => {
+        /* Remove EL in case of Enter key not used to connect */
+        document.removeEventListener('keydown', enterKeyConnectAttempt)
         /* Stop timer, change status */
         clearTimeout(connection_error_pending)
         status = NO_USERNAME
@@ -222,7 +224,7 @@ function updatePeopleCounter(count) {
 function updateInterlocutor(interlocutor) {
     let interlocPrinter = document.getElementById('interloc')
     if (interlocutor != undefined) {
-        interlocPrinter.innerHTML = 'Vous discutez avec ' + interlocutor + '.'
+        interlocPrinter.innerHTML = 'Vous discutez avec ' + interlocutor
     }
     else {
         interlocPrinter.innerHTML = 'Vous ne discutez avec personne !'
@@ -276,6 +278,10 @@ function listenToIncomingMessages(socket) {
 
     socket.on('how many?', count => {
         updatePeopleCounter(count)
+    })
+
+    socket.on('hello', data => {
+        updateInterlocutor(data.username)
     })
 }
 
