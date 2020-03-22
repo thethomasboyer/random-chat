@@ -1,5 +1,9 @@
 /* eslint-disable indent */
 
+/*******************************************/
+/* /////////// Server creation \\\\\\\\\\\ */
+/*******************************************/
+
 const express = require('express')
 const path = require('path')
 // app represents the logic of the server.
@@ -14,88 +18,34 @@ app.use(express.static(path.join(__dirname, 'public')))
 // all routing logic is handled by routes/router.js
 app.use('/', require('./routes/router'))
 
-/* fixed array of available chat rooms */
-/* a socket should be part of less than one
- * of these at any given time */
+
+/*******************************************/
+/* ///////////// pseudo-DB \\\\\\\\\\\\\\\ */
+/*******************************************/
+
+/* Fixed array of available chat rooms.
+/* A socket should be part of less than one
+ * of these at any given time. */
 let chat_rooms = ['1', '2']
-let nb_chat_rooms = chat_rooms.length
+let nb_chat_rooms = chat_rooms.length // fixed for now
 
 /* Array of "people" object.
  * To each socket(.id) corresponds a unique human-chosen username.
- * Model : users = [
- * { id: socket.id, username: username },
- * ] */
+ * --- Model ---
+ * user = { 
+ *  id: socket.id,     (<- string  - unique hash given by socket.io)
+ *  username: usrnm,   (<- string  - chosen by user)
+ *  room: i            (<- integer - managed by server)
+ * }
+ * --- 'pseudo-DB' ---
+ * users = [user1, user2, ...] */
 let users = []
 
-function emitNewRoomDetailsToSocket(interloc, socket, emitting_room) {
-    /* Callback function to emit new room details
-    * after joining it */
-    let usrnm
-    if (interloc === undefined) usrnm = undefined
-    else usrnm = interloc.username
-    io.to(socket.id).emit('joined room', { room: emitting_room, interlocutor: usrnm })
-}
 
-function sendSocketDetailsToNewRoom(socket, new_room) {
-    let usrnm = findUsername(socket.id)
-    socket.broadcast.to(new_room).emit('hello', {
-        id: socket.id,
-        username: usrnm
-    })
-}
+/*******************************************/
+/* /////////////// utils \\\\\\\\\\\\\\\\\ */
+/*******************************************/
 
-function changeRoom(socket, room, first_connection = false) {
-    /* Make socket leave its current chat room (if existing),
-     * and join 'room' (to ensure uniqueness). 
-     * Also automatically join general if first connection. */
-    // Get user's current chat room
-    let socket_room = findEmittingRoom(socket, first_connection)
-    // If found...
-    if (socket_room != undefined && !first_connection) {
-        // ...leave it
-        socket.leave(socket_room, () => {
-            console.log('socket ' + socket.id + ' left room ' + room)
-            io.to(socket.id).emit('left room', socket_room)
-        })
-    }
-    // Join given room...
-    socket.join(room, () => {
-        console.log('socket ' + socket.id + ' joined room ' + room)
-        // Get room details
-        getInterloc(socket, first_connection, emitNewRoomDetailsToSocket)
-        // Broadcast details of socket to new room
-        sendSocketDetailsToNewRoom(socket, room)
-    })
-    // ... and general if first connection
-    if (first_connection) {
-        socket.join('general', () => {
-            console.log('socket ' + socket.id + ' joined general')
-        })
-    }
-}
-
-function searchForChatRoom(socket, room_index = 0, first_connection = false) {
-    /* Recursively search for an available chat room.
-     * If chat room of index 'room_index' in array 'chat_rooms'
-     * is full, try next, if existing. 
-     * If none found, retry from beginning in 3s. */
-    let room = chat_rooms[room_index]
-    io.in(room).clients((error, clients) => {
-        if (error) console.log(error)
-        if (clients.length < 2) {
-            changeRoom(socket, room, first_connection)
-        } else if (room_index + 1 < nb_chat_rooms) {
-            searchForChatRoom(socket, room_index + 1, first_connection)
-        } else {
-            console.log(
-                'no available room found for socket ' +
-                socket.id +
-                ', searching again in 3s',
-            )
-            setTimeout(searchForChatRoom, 3000, socket, 0, first_connection)
-        }
-    })
-}
 
 function searchForChatRoomAvoidUser(socket, user, room_index = 0) {
     /* Recursively search for an available chat room, avoiding 'user'.
@@ -122,25 +72,86 @@ function searchForChatRoomAvoidUser(socket, user, room_index = 0) {
     })
 }
 
-function findEmittingRoom(socket, first_connection = false) {
-    /* Return the emitting room the socket is in.
-     * Assumes that the socket is only part of 'general',
-     * one chat room or less, and its own.
-     * Will log to console if not found, unless
-     * first connection specified  */
-    let rooms = Object.keys(socket.rooms)
-    let emitting_room
-    for (let room of rooms) {
-        if (room != socket.id && room != 'general') {
-            emitting_room = room
-            break
-        } // .filter ?
-    }
-    if (emitting_room == undefined && !first_connection) {
-        console.log(
-            'Error: couldn\'t find emitting room for socket ' + socket.id + ' in findEmittingRoom!',
-        )
-    } else return emitting_room
+function searchForChatRoom(socket, room_index = 0, first_connection = false) {
+    /* Recursively search for an available chat room.
+     * If chat room of index 'room_index' in array 'chat_rooms'
+     * is full, try next, if existing. 
+     * If none found, retry from beginning in 3s. */
+    let room = chat_rooms[room_index]
+    io.in(room).clients((error, clients) => {
+        if (error) console.log(error)
+        if (clients.length < 2) {
+            changeRoom(socket, room, first_connection, () => { })
+        } else if (room_index + 1 < nb_chat_rooms) {
+            searchForChatRoom(socket, room_index + 1, first_connection)
+        } else {
+            console.log(
+                'no available room found for socket ' +
+                socket.id +
+                ', searching again in 3s',
+            )
+            setTimeout(searchForChatRoom, 3000, socket, 0, first_connection)
+        }
+    })
+}
+
+function changeRoom(socket, room, first_connection = false, callback) {
+    /* Make socket leave its current chat room (if existing, 
+     * and if not first connection), and join 'room' 
+     * (to ensure uniqueness). */
+    // Get user's current chat room
+    let socket_room = findEmittingRoom(socket, first_connection)
+    // If found, and if not first connection...
+    if (socket_room != undefined && !first_connection) {
+        // ...leave it...
+        socket.leave(socket_room, () => {
+            console.log('socket ' + socket.id + ' left room ' + room)
+            io.to(socket.id).emit('left room', socket_room)
+            // ...then join the new one
+            joinRoom(socket, room, first_connection, callback)
+        })
+    } else joinRoom(socket, room, first_connection, callback)
+}
+
+function joinRoom(socket, room, first_connection, callback) {
+    /* Simply join the given room, without any checks.
+     * Then, get/emit details from/to that new room, if it isn't 'general'. 
+     * The callback does not wait for details. */
+    socket.join(room, () => {
+        console.log('socket ' + socket.id + ' joined room ' + room)
+        /* Update DB */
+        addRoomToUserObjInDB(socket, room)
+        /* Get/Emit details, and/or callback */
+        if (room != 'general') {
+            // Get room details
+            emitNewRoomDetailsToSocket(socket, first_connection, room)
+            // Broadcast details of socket to new room
+            broadcastSocketDetailsToNewRoom(socket, room)
+        }
+        callback()
+    })
+}
+
+function addRoomToUserObjInDB(socket, room) {
+    let user = users.find(usr => (usr.id === socket.id))
+    user
+}
+
+function broadcastSocketDetailsToNewRoom(socket, new_room) {
+    let usrnm = findUsername(socket.id)
+    socket.broadcast.to(new_room).emit('hello', {
+        id: socket.id,
+        username: usrnm
+    })
+}
+
+function emitNewRoomDetailsToSocket(socket, first_connection, new_room) {
+    /* Emit new room details to joining socket. */
+    getInterloc(socket, first_connection, (interloc) => {
+        getUsernamefromgetInterlocReturn(interloc, (usrnm) => {
+            io.to(socket.id).emit('joined room', { room: new_room, interlocutor: usrnm })
+        })
+    })
 }
 
 function getInterloc(socket, first_connection, callback) {
@@ -158,13 +169,44 @@ function getInterloc(socket, first_connection, callback) {
                     if (interloc_id != undefined) usrnm = findUsername(interloc_id)
                     else usrnm = undefined
                     var interloc = { id: interloc_id, username: usrnm }
-                    return callback(interloc, socket, emitting_room)
+                    return callback(interloc)
                 } // COMMENTS/SEPARATE CODE PLZ
             }
-            callback(undefined, socket, emitting_room)
+            return callback(undefined)
         })
-    } else if (!first_connection) console.log('Error: couldn\'t find emitting room for socket ' + socket.id + ' in getInterloc!')
-    callback(undefined, socket, emitting_room)
+    } else {
+        if (!first_connection) console.log('Error: couldn\'t find emitting room for socket ' + socket.id + ' in getInterloc!')
+        return callback(undefined)
+    }
+}
+
+function getUsernamefromgetInterlocReturn(interloc, callback) {
+    /* Callback on getInterloc return, becauz async's hard bruh */
+    let usrnm = undefined
+    if (interloc === undefined) usrnm = undefined
+    else usrnm = interloc.username
+    callback(usrnm)
+}
+
+function findEmittingRoom(socket, first_connection = false) {
+    /* Return the emitting room the socket is in.
+     * Assumes that the socket is only part of 'general',
+     * one chat room or less, and its own.
+     * Will log to console if not found, unless
+     * first connection specified  */
+    let rooms = Object.keys(socket.rooms)
+    let emitting_room = undefined
+    for (let room of rooms) {
+        if (room != socket.id && room != 'general') {
+            emitting_room = room
+            break
+        } // .filter ?
+    }
+    if (emitting_room === undefined && !first_connection) {
+        console.log(
+            'Error: couldn\'t find emitting room for socket ' + socket.id + ' in findEmittingRoom!',
+        )
+    } else emitting_room
 }
 
 function findUsername(socket_id) {
@@ -183,21 +225,33 @@ function findUsername(socket_id) {
     }
 }
 
+function createLeavingMessageInfo(socket, callback) {
+    let room = findEmittingRoom(socket)
+    let usrnm = findUsername(socket.id)
+    callback(room, usrnm)
+}
+
 /*******************************************/
-/* ///////////// Entry point ///////////// */
+/* ///////////// Entry point \\\\\\\\\\\\\ */
 /*******************************************/
+
+/* On connection of socket... */
 io.on('connect', socket => {
     console.log('-> socket ' + socket.id + ' just connected ->')
 
-    /* Send connection confirmation... */
+    /* Send connection confirmation */
     io.to(socket.id).emit('connection success')
 
-    /* ...and tell everybody else somebody just connected */
-    io.in('general').clients((error, clients) => {
-        if (error) console.log(error)
-        socket.broadcast.to('general').emit('greeting', {
-            newcommer: socket.id,
-            peoplecount: clients.length,
+    /* Everybody joins 'general' on first connection */
+    changeRoom(socket, 'general', true, () => {
+        // Then, tell everybody else somebody just connected,
+        // and upgrade the peoplecounter
+        io.in('general').clients((error, clients) => {
+            if (error) console.log(error)
+            socket.broadcast.to('general').emit('greeting', {
+                newcommer: socket.id,
+                peoplecount: clients.length,
+            })
         })
     })
 
@@ -226,16 +280,20 @@ io.on('connect', socket => {
 
     /* Transmit chat messages to adequate rooms */
     socket.on('chat message', msg => {
-        //find the room it originates from
+        // Find the room it originates from (NOT undefined-proof)
         let emitting_room = findEmittingRoom(socket)
-        //get the username of the sender
+        // get the username of the sender (undefined-proof)
         let username = findUsername(socket)
         if (emitting_room != undefined) {
-            //send the message back to the room, but not to the sender
+            // Send the message back to the room, but not to the sender
             socket.broadcast.to(emitting_room).emit('chat message', {
                 message: msg,
                 sender: username,
             })
+        } else {
+            console.log('Error: could not find emitting room while chat message received!')
+            // Send back an error message
+            io.to(socket.id).emit('message sending error')
         }
     })
 
@@ -246,21 +304,23 @@ io.on('connect', socket => {
         if (emitting_room != undefined) {
             //send the message back to the room, but not to the sender
             socket.broadcast.to(emitting_room).emit('user typing')
+        } else {
+            console.log('Error: could not find emitting room while user typing message received!')
         }
     })
 
-    /* Change of interlocutor */
-    socket.on('change interloc', () => {
+    /* Change of interlocutor ON HOLD */
+    /* socket.on('change interloc', () => {
         console.log('User ' + socket.id + ' asked to change interlocutor')
         let interloc = (socket)
         searchForChatRoomAvoidUser(socket, interloc.id)
-    })
+    }) */
 
     /* Handle disconnection */
     socket.on('disconnect', reason => {
         console.log('<- socket ' + socket.id + ' just left ; cause: ' + reason + ' <-')
-        //remove the leaving user from "users" list
-        //(assuming only one user corresponding to id)
+        // Remove the leaving user from "users" list
+        // (assuming only one user corresponding to id)
         let username
         for (let i = 0; i < users.length; i++) {
             if (users[i].id == socket.id) {
@@ -268,6 +328,7 @@ io.on('connect', socket => {
                 users.splice(i, 1); break
             }
         }
+        // Tell everybody somebody just left
         io.in('general').clients((error, clients) => {
             if (error) console.log(error)
             io.to('general').emit('byebye', {
@@ -275,8 +336,19 @@ io.on('connect', socket => {
                 peoplecount: clients.length,
             })
         })
+        // Tell the chat room there's a leaver
+        createLeavingMessageInfo(socket, (room, usrnm) => {
+            socket.broadcast.to(room).emit('leaving', {
+                id: socket.id,
+                username: usrnm
+            })
+        })
     })
 })
+
+/*******************************************/
+/* //////////// server start \\\\\\\\\\\\\ */
+/*******************************************/
 
 http.listen(8080, () => {
     console.log('-----------------------\nListening on port 8080\n-----------------------\n')

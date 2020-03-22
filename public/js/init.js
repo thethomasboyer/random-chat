@@ -18,8 +18,10 @@ function connect() {
     /* If a connection attempt has already been emitted, don't try again... */
     if (status === CONNECTION_PENDING) return 1
     /* ...else, launch socket.io */
-    else status = CONNECTION_PENDING
-    var socket = io()
+    else {
+        status = CONNECTION_PENDING
+        var socket = io()
+    }
     /* Bind socket to document because fuck you that's the only thing working */
     document.socket = socket
     /* Start timer for connection timeout error */
@@ -39,12 +41,12 @@ function connect() {
         document.addEventListener('keydown', enterKeyUsernameProp)
         /* Wait for username confirmation... */
         socket.on('accepted username', usrnm => {
-            /* Wait for an available room*/
+            /* Wait for an available room */
             status = ROOM_PENDING
             /* Cache username */
             username = usrnm
             /* Initiate chat logic */
-            init(socket, username)
+            initChat(socket, username)
             let message = '<font size="3"><span uk-icon=\'icon: check; ratio: 1.5\'></span>  Bienvenue </font>' + username + '<font size="3"> !</font>'
             UIkit.notification({ message: message, pos: 'bottom-center', status: 'success' })
             /* Reveal spinner page */
@@ -231,11 +233,11 @@ function updateInterlocutor(interlocutor) {
     }
 }
 
-/* Change interlocutor */
-function changeInterlocutor(socket) {
+/* Change interlocutor ON HOLD */
+/* function changeInterlocutor(socket) {
     socket.emit('change interloc')
     console.log('asked to change interlocutor, must be boring')
-}
+} */
 
 /* Handle received messages */
 function listenToIncomingMessages(socket) {
@@ -261,8 +263,7 @@ function listenToIncomingMessages(socket) {
             data.newcommer +
             ' vient de se connecter !</font>'
         UIkit.notification({ message: notif, pos: 'top-right' })
-        const count = data.peoplecount + 1
-        updatePeopleCounter(count)
+        updatePeopleCounter(data.peoplecount)
     })
 
     socket.on('byebye', data => {
@@ -283,10 +284,14 @@ function listenToIncomingMessages(socket) {
     socket.on('hello', data => {
         updateInterlocutor(data.username)
     })
+
+    socket.on('leaving', data => {
+        updateInterlocutor(data.username)
+    })
 }
 
 /* COMMENTS HERE */
-function init(socket) {
+function initChat(socket) {
     /* Ask how many people connected */
     askHowMany(socket)
     /* Listen to incoming messages */
