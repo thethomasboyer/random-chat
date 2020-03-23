@@ -43,34 +43,34 @@ let users = []
 
 
 /*******************************************/
-/* /////////////// utils \\\\\\\\\\\\\\\\\ */
+/* /////////////// Utils \\\\\\\\\\\\\\\\\ */
 /*******************************************/
 
 
-function searchForChatRoomAvoidUser(socket, user, room_index = 0) {
-    /* Recursively search for an available chat room, avoiding 'user'.
-     * If chat room of index 'room_index' in array 'chat_rooms'
-     * full, or 'user' in it, try next, if existing. */
-    let room = chat_rooms[room_index]
-    io.in(room).clients((error, clients) => {
-        if (error) console.log(error)
-        //try less than 1 member in room and 'user' not member
-        if (clients.length < 2 && !(user in clients)) {
-            changeRoom(socket, room)
-        } else if (room_index + 1 < nb_chat_rooms) {
-            //if not suitable, try next chat room, if existing
-            searchForChatRoomAvoidUser(socket, user, room_index + 1)
-        } else {
-            //else retry whole search process later
-            console.log(
-                'no room found for socket ' +
-                socket.id +
-                ', searching again in 3s',
-            )
-            setTimeout(searchForChatRoom, 3000, socket)
-        }
-    })
-}
+// function searchForChatRoomAvoidUser(socket, user, room_index = 0) {
+//     /* Recursively search for an available chat room, avoiding 'user'.
+//      * If chat room of index 'room_index' in array 'chat_rooms'
+//      * full, or 'user' in it, try next, if existing. */
+//     let room = chat_rooms[room_index]
+//     io.in(room).clients((error, clients) => {
+//         if (error) console.log(error)
+//         //try less than 1 member in room and 'user' not member
+//         if (clients.length < 2 && !(user in clients)) {
+//             changeRoom(socket, room)
+//         } else if (room_index + 1 < nb_chat_rooms) {
+//             //if not suitable, try next chat room, if existing
+//             searchForChatRoomAvoidUser(socket, user, room_index + 1)
+//         } else {
+//             //else retry whole search process later
+//             console.log(
+//                 'no room found for socket ' +
+//                 socket.id +
+//                 ', searching again in 3s',
+//             )
+//             setTimeout(searchForChatRoom, 3000, socket)
+//         }
+//     })
+// }
 
 function searchForChatRoom(socket, room_index = 0, first_connection = false) {
     /* Recursively search for an available chat room.
@@ -115,12 +115,13 @@ function changeRoom(socket, room, first_connection = false, callback) {
 
 function joinRoom(socket, room, first_connection, callback) {
     /* Simply join the given room, without any checks.
-     * Then, get/emit details from/to that new room, if it isn't 'general'. 
+     * Then, get/emit details from/to that new room, if it isn't 'general',
+     * and update the pseudo-DB. 
      * The callback does not wait for details. */
     socket.join(room, () => {
         console.log('socket ' + socket.id + ' joined room ' + room)
         /* Update DB */
-        addRoomToUserObjInDB(socket, room)
+        changeRoomToUserObjInDB(socket, room)
         /* Get/Emit details, and/or callback */
         if (room != 'general') {
             // Get room details
@@ -132,12 +133,27 @@ function joinRoom(socket, room, first_connection, callback) {
     })
 }
 
-function addRoomToUserObjInDB(socket, room) {
-    let user = users.find(usr => (usr.id === socket.id))
-    user
+function changeRoomToUserObjInDB(socket, room) {
+    /* Update the pseudo-DB changing 'room' attribute
+    * to socket. */
+    getUserFromSocket(socket, user => {
+        if (user === undefined) {
+            console.log('Error: user is undefined in changeRoomToUserObjInDB!')
+        } else {
+            user.room = room
+        }
+    })
+}
+
+function getUserFromSocket(socket, callback) {
+    /* Return to callback the (first) 'user' element
+    * of list 'users' which id corresponds to that of socket. */
+    let user = users.find(usr => usr.id === socket.id)
+    callback(user)
 }
 
 function broadcastSocketDetailsToNewRoom(socket, new_room) {
+    /* Broadcast sockets' det... ok just read the title. */
     let usrnm = findUsername(socket.id)
     socket.broadcast.to(new_room).emit('hello', {
         id: socket.id,
@@ -217,8 +233,7 @@ function findUsername(socket_id) {
     if (socket_id === undefined) {
         console.log('Error: socket is undefined in findUsername!')
         return undefined
-    }
-    for (let i = 0; i < users.length; i++) {
+    } else for (let i = 0; i < users.length; i++) {
         if (users[i].id == socket_id) {
             return users[i].username
         }
@@ -226,9 +241,10 @@ function findUsername(socket_id) {
 }
 
 function createLeavingMessageInfo(socket, callback) {
-    let room = findEmittingRoom(socket)
-    let usrnm = findUsername(socket.id)
-    callback(room, usrnm)
+    getUserFromSocket(socket, user => {
+        if (user === undefined) callback(undefined, undefined)
+        else callback(user.room, user.username)
+    })
 }
 
 /*******************************************/
@@ -237,6 +253,9 @@ function createLeavingMessageInfo(socket, callback) {
 
 /* On connection of socket... */
 io.on('connect', socket => {
+    /* Add user to pseudo-DB */
+    users.push({ id: socket.id, username: undefined, room: undefined })
+
     console.log('-> socket ' + socket.id + ' just connected ->')
 
     /* Send connection confirmation */
@@ -262,11 +281,19 @@ io.on('connect', socket => {
             io.to(socket.id).emit('used username')
         } else {
             // accept
-            users.push({ id: socket.id, username: username })
-            io.to(socket.id).emit('accepted username', username)
-            /* Initiate chat logic */
-            /* Check for an available chat room, loop until found */
-            searchForChatRoom(socket, 0, true)
+            getUserFromSocket(socket, user => {
+                if (user === undefined) {
+                    console.log('Error: couldn\'t find user with id ' + socket.id + ' in DB!')
+                    io.to(socket.id).emit('error finding user in DB')
+                } else {
+                    // write to DB, confirm username to socket
+                    user.username = username
+                    io.to(socket.id).emit('accepted username', username)
+                    /* Initiate chat logic */
+                    /* Check for an available chat room, loop until found */
+                    searchForChatRoom(socket, 0, true)
+                }
+            })
         }
     })
 
@@ -338,10 +365,14 @@ io.on('connect', socket => {
         })
         // Tell the chat room there's a leaver
         createLeavingMessageInfo(socket, (room, usrnm) => {
-            socket.broadcast.to(room).emit('leaving', {
-                id: socket.id,
-                username: usrnm
-            })
+            if (room === undefined) {
+                console.log('Error: room is undefined while creating leaving message!')
+            } else {
+                socket.broadcast.to(room).emit('leaving', {
+                    id: socket.id,
+                    username: usrnm
+                })
+            }
         })
     })
 })
