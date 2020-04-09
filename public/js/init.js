@@ -62,6 +62,7 @@ function connect() {
                 /* Respond to "Enter" key press */
                 document.addEventListener('keydown', enterKeySendsMsg)
                 /* Update interlocutor */
+                console.log('data:', data)
                 updateInterlocutor(data.interlocutor)
             })
         })
