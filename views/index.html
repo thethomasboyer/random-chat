@@ -56,10 +56,11 @@
 					<!-- input form -->
 					<div class="type_msg">
 						<div class="input_msg_write">
-							<input type="text" class="write_msg" id="userMessageInputField" placeholder="Tapez votre message ici" />
-							<button class="msg_send_btn" uk-tooltip="title: Alors ? On hésite ?; delay: 5000" type="button"
-								onclick="sendMessage(socket)"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+							<textarea rows="1" type="text" class="write_msg" id="userMessageInputField"
+								placeholder="Tapez votre message ici"></textarea>
 						</div>
+						<button class="msg_send_btn" uk-tooltip="title: Alors ? On hésite ?; delay: 5000" type="button"
+							onclick="sendMessage(socket)"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button>
 					</div>
 				</div>
 			</div>

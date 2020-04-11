@@ -235,6 +235,37 @@ function updateInterlocutor(interlocutor) {
     }
 }
 
+function resize_msg_input_area() {
+    var text = document.getElementById('userMessageInputField')
+    var observe
+    if (window.attachEvent) {
+        observe = function (element, event, handler) {
+            element.attachEvent('on' + event, handler)
+        }
+    }
+    else {
+        observe = function (element, event, handler) {
+            element.addEventListener(event, handler, false)
+        }
+    }
+    function resize() {
+        text.style.height = 'auto'
+        text.style.height = text.scrollHeight + 'px'
+    }
+    function delayedResize() {
+        window.setTimeout(resize, 50)
+    }
+    observe(text, 'change', resize)
+    observe(text, 'cut', delayedResize)
+    observe(text, 'paste', delayedResize)
+    observe(text, 'drop', delayedResize)
+    observe(text, 'keydown', delayedResize)
+
+    text.focus()
+    text.select()
+    resize()
+}
+
 /* Change interlocutor ON HOLD */
 /* function changeInterlocutor(socket) {
     socket.emit('change interloc')
@@ -300,4 +331,5 @@ function initChat(socket) {
     listenToIncomingMessages(socket)
     /* Check if user is typing */
     checkUserIsTyping(socket)
+    resize_msg_input_area()
 }
