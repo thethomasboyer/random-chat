@@ -411,7 +411,11 @@ io.on('connect', socket => {
 /* //////////// server start \\\\\\\\\\\\\ */
 /*******************************************/
 
-http.listen(8080, () => {
+// Heroku configuration
+let port = process.env.PORT
+if (port == null || port == "") port = 8080
+
+http.listen(port, () => {
     const DASHESNL = '-----------------------\n'
     console.log(DASHESNL + 'Listening on port 8080\n' + DASHESNL)
 })
