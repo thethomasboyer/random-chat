@@ -138,8 +138,9 @@ div.welcomeTitle h3 {
 /* Warpers */
 
 .container {
-    max-width: 1170px;
+    max-width: 70%;
     margin: auto;
+    margin-top: 15px;
 }
 
 .messaging {
@@ -158,7 +159,7 @@ div.welcomeTitle h3 {
 
 .msg_history {
     height: 516px;
-    overflow-y: auto;
+    overflow-y: scroll;
 }
 
 .type_msg {
@@ -170,24 +171,20 @@ div.welcomeTitle h3 {
 /* Message style */
 
 .incoming_msg {
-    display: inline-block;
-    padding: 0 0 0 10px;
-    vertical-align: top;
-    width: 92%;
+    overflow: hidden;
+    margin: 26px 0 26px;
 }
 
 .sub_incoming_msg {
-    width: 57%;
-}
-
-.sub_incoming_msg p {
+    max-width: 45%;
+    width: auto;
     background: #ebebeb none repeat scroll 0 0;
     border-radius: 3px;
     color: #646464;
     font-size: 14px;
     margin: 0;
     padding: 5px 10px 5px 12px;
-    width: 100%;
+    float: left;
 }
 
 .outgoing_msg {
@@ -196,20 +193,16 @@ div.welcomeTitle h3 {
 }
 
 .sub_outgoing_msg {
-    float: right;
-    width: 46%;
-}
-
-.sub_outgoing_msg p {
+    max-width: 45%;
+    width: auto;
     background: #05728f none repeat scroll 0 0;
     border-radius: 3px;
     color: #fff;
     font-size: 14px;
     margin: 0;
     padding: 5px 10px 5px 12px;
-    width: 100%;
+    float: right;
 }
-
 
 /* Date style */
 

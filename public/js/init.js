@@ -193,9 +193,9 @@ function appendNewMessage(displayed_messages, new_msg, source, username) {
     // sub-div
     let new_sub_msg_inst = document.createElement('div')
     new_message_instance.appendChild(new_sub_msg_inst)
-    // paragraph (text-container)
-    let p = document.createElement('p')
-    new_sub_msg_inst.appendChild(p)
+    /* // paragraph (text-container)
+    let d = document.createElement('div')
+    new_sub_msg_inst.appendChild(p) */
     // apply relevant style
     if (source) {
         new_message_instance.className += 'outgoing_msg'
@@ -204,9 +204,10 @@ function appendNewMessage(displayed_messages, new_msg, source, username) {
         new_message_instance.className += 'incoming_msg'
         new_sub_msg_inst.className += 'sub_incoming_msg'
     }
-    // put da text into da p
+    /*  // put da text into da p
     // username?
-    p.appendChild(document.createTextNode(new_msg))
+    p.appendChild(document.createTextNode(new_msg)) */
+    new_sub_msg_inst.appendChild(document.createTextNode(new_msg))
     displayed_messages.appendChild(new_message_instance)
     // scroll to bottom
     displayed_messages.scrollTo(0, document.body.scrollHeight)
