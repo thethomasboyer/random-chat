@@ -62,7 +62,6 @@ function connect() {
                 /* Respond to "Enter" key press */
                 document.addEventListener('keydown', enterKeySendsMsg)
                 /* Update interlocutor */
-                console.log('data:', data)
                 updateInterlocutor(data.interlocutor)
             })
         })
@@ -149,6 +148,7 @@ function sendMessage(socket) {
     let inputField = document.getElementById('userMessageInputField')
     // get its value
     let message = inputField.value
+    console.log('DEBUG//', message, message == '\n')
     // do nothing if message is empty
     if (message == '') {
         return false
@@ -235,35 +235,17 @@ function updateInterlocutor(interlocutor) {
     }
 }
 
+/* Height of text input area changes with content */
 function resize_msg_input_area() {
-    var text = document.getElementById('userMessageInputField')
-    var observe
-    if (window.attachEvent) {
-        observe = function (element, event, handler) {
-            element.attachEvent('on' + event, handler)
-        }
-    }
-    else {
-        observe = function (element, event, handler) {
-            element.addEventListener(event, handler, false)
-        }
-    }
-    function resize() {
-        text.style.height = 'auto'
-        text.style.height = text.scrollHeight + 'px'
-    }
-    function delayedResize() {
-        window.setTimeout(resize, 50)
-    }
-    observe(text, 'change', resize)
-    observe(text, 'cut', delayedResize)
-    observe(text, 'paste', delayedResize)
-    observe(text, 'drop', delayedResize)
-    observe(text, 'keydown', delayedResize)
+    var tx = document.getElementById('userMessageInputField')
+    tx.setAttribute('style', 'height:' + (tx.scrollHeight) + 'px; overflow-y:hidden;')
+    tx.addEventListener('input', onInputAdaptHeight, false)
 
-    text.focus()
-    text.select()
-    resize()
+    function onInputAdaptHeight() {
+        this.style.height = 'auto'
+        this.style.height = (this.scrollHeight) + 'px'
+        if (this.value == '\n') this.value = ''
+    }
 }
 
 /* Change interlocutor ON HOLD */
@@ -331,5 +313,6 @@ function initChat(socket) {
     listenToIncomingMessages(socket)
     /* Check if user is typing */
     checkUserIsTyping(socket)
+    /* Dynamic text input area*/
     resize_msg_input_area()
 }

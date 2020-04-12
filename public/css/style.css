@@ -22,25 +22,19 @@
     z-index: 3;
 }
 
-.welcomeTitle {
+#welcomeTitleContainer {
     position: relative;
     top: 25%;
-    width: 100%;
     text-align: center;
     margin-top: 30px;
-    display: flex;
     align-items: center;
 }
 
-div.welcomeTitle {
+#welcomeTitle {
     height: 10em;
     display: flex;
     align-items: center;
     justify-content: center
-}
-
-div.welcomeTitle h1 {
-    margin: 0
 }
 
 
@@ -57,6 +51,7 @@ div.welcomeTitle h1 {
     text-align: center;
     top: 50%;
     width: 100%;
+    align-items: center;
 }
 
 #usernameFormPage .form .usernameInput {
@@ -66,7 +61,8 @@ div.welcomeTitle h1 {
     outline: none;
     padding-bottom: 15px;
     text-align: center;
-    width: 400px;
+    width: 90%;
+    max-width: 400px;
 }
 
 #usernameFormPage .title {
@@ -117,7 +113,7 @@ div.welcomeTitle h3 {
 .uk-notification {
     width: auto!important;
     min-width: 300px!important;
-    max-width: 1500px!important;
+    max-width: 1700px!important;
     height: auto!important;
     display: flex!important;
     flex-direction: column;
@@ -126,8 +122,8 @@ div.welcomeTitle h3 {
 .uk-notification-message {
     padding-right: 1em!important;
     width: auto!important;
-    max-width: 80%!important;
-    text-align: left;
+    max-width: 90%!important;
+    text-align: center;
     display: inline-flex;
 }
 
@@ -138,7 +134,7 @@ div.welcomeTitle h3 {
 /* Warpers */
 
 .container {
-    max-width: 70%;
+    max-width: 80%;
     margin: auto;
     margin-top: 15px;
 }
@@ -176,7 +172,7 @@ div.welcomeTitle h3 {
 }
 
 .sub_incoming_msg {
-    max-width: 45%;
+    max-width: 65%;
     width: auto;
     background: #ebebeb none repeat scroll 0 0;
     border-radius: 3px;
@@ -194,7 +190,7 @@ div.welcomeTitle h3 {
 }
 
 .sub_outgoing_msg {
-    max-width: 45%;
+    max-width: 65%;
     width: auto;
     background: #05728f none repeat scroll 0 0;
     border-radius: 3px;
@@ -218,27 +214,25 @@ div.welcomeTitle h3 {
 
 /* Input form style */
 
+.type_msg {
+    min-height: 47px;
+}
+
+.input_msg_write {
+    padding-right: 44px;
+    padding-top: 10px;
+    height: auto;
+}
+
 .write_msg {
     border: 0 none white;
     overflow-y: scroll;
-    padding: 0;
+    padding: 5px;
     outline: none;
     resize: none;
     width: 100%;
     max-height: 5em;
-}
-
-.input_msg_write {
-    padding-right: 45px;
-}
-
-.input_msg_write input {
-    background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
-    border: medium none;
-    color: #4c4c4c;
-    font-size: 15px;
-    min-height: 48px;
-    width: 100%;
+    height: auto;
 }
 
 .msg_send_btn {
